@@ -8,10 +8,18 @@ import lombok.Data;
 public class ListingResponse {
 
     private String title;
+
     private String source;
-    private Double price;
-    private Double shippingCost;
-    private Double totalPrice;
+
+    private double price;
+
+    private double shippingCost;
+
+    private double totalPrice;
+
     private String productUrl;
+
+    private String imageUrl;
+
     private String availability;
 }

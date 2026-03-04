@@ -1,6 +1,5 @@
 package com.example.demo.service.aggregation;
 
-
 import com.example.demo.model.dto.GarageSearchRequest;
 import com.example.demo.model.dto.ListingResponse;
 import com.example.demo.model.dto.VehicleSearchRequest;
@@ -11,14 +10,12 @@ import com.example.demo.service.amazon.AmazonSearchService;
 import com.example.demo.service.ebay.EbaySearchService;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class AggregationService {
+
     private final EbaySearchService ebaySearchService;
     private final AmazonSearchService amazonSearchService;
     private final AffiliateLinkService affiliateLinkService;
@@ -78,7 +75,10 @@ public class AggregationService {
         );
 
         results.addAll(
-                amazonSearchService.search(query)
+                amazonSearchService.searchWithVehicle(
+                        request,
+                        query
+                )
         );
 
         results.replaceAll(affiliateLinkService::inject);
@@ -110,7 +110,6 @@ public class AggregationService {
         List<ListingResponse> allResults =
                 new ArrayList<>();
 
-        // Run search for each vehicle
         for (GarageVehicle vehicle : vehicles) {
 
             VehicleSearchRequest vehicleRequest =
@@ -126,7 +125,6 @@ public class AggregationService {
             );
         }
 
-        // Remove duplicates by product URL
         Map<String, ListingResponse> unique =
                 allResults.stream()
                         .collect(Collectors.toMap(
@@ -138,10 +136,8 @@ public class AggregationService {
         List<ListingResponse> deduped =
                 new ArrayList<>(unique.values());
 
-        // Inject affiliate links
         deduped.replaceAll(affiliateLinkService::inject);
 
-        // Sort by lowest price
         deduped.sort(
                 Comparator.comparing(
                         ListingResponse::getTotalPrice

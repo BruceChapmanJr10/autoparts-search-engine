@@ -14,17 +14,17 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class Listing {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Search term used to fetch this listing (enables query-based caching)
     @Column(nullable = false)
     private String searchQuery;
 
     private String title;
 
-    private String source; // EBAY, AMAZON (future)
+    private String source;
 
     private Double price;
 
@@ -35,19 +35,18 @@ public class Listing {
     @Column(unique = true)
     private String productUrl;
 
+    // 🔥 ADD THIS
+    private String imageUrl;
+
     private String availability;
 
-    // Timestamp used for 6-hour cache expiration
     private Long lastUpdated;
 
-    // Vehicle fitment fields
     private Integer year;
 
     private String make;
 
     private String model;
-
-    // Fitment validation fields
 
     @Column(name = "year_start")
     private Integer yearStart;

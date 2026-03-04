@@ -26,20 +26,13 @@ export default function Home() {
 
         setLoading(true);
 
-        try {
+        const res = await fetch(
+            `${API_URL}/api/search?query=${query}`
+        );
 
-            const res = await fetch(
-                `${API_URL}/api/search?query=${query}`
-            );
+        const data = await res.json();
 
-            const data = await res.json();
-
-            setResults(data);
-
-        } catch (err) {
-            console.error("Search failed", err);
-        }
-
+        setResults(data);
         setLoading(false);
     }
 
@@ -49,72 +42,137 @@ export default function Home() {
 
         setLoading(true);
 
-        try {
+        const res = await fetch(
+            `${API_URL}/api/search`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    year: parseInt(vehicle.year),
+                    make: vehicle.make,
+                    model: vehicle.model,
+                    engine: vehicle.engine,
+                    trim: vehicle.trim,
+                    part: vehicle.part
+                })
+            }
+        );
 
-            const res = await fetch(
-                `${API_URL}/api/search`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        year: parseInt(vehicle.year),
-                        make: vehicle.make,
-                        model: vehicle.model,
-                        engine: vehicle.engine,
-                        trim: vehicle.trim,
-                        part: vehicle.part
-                    })
-                }
-            );
+        const data = await res.json();
 
-            const data = await res.json();
-
-            setResults(data);
-
-        } catch (err) {
-            console.error("Vehicle search failed", err);
-        }
-
+        setResults(data);
         setLoading(false);
     }
 
     return (
-        <main className="min-h-screen bg-gray-100">
+        <main className="min-h-screen bg-gray-50">
 
-            {/* Header */}
+            {/* HERO SECTION */}
 
-            <div className="bg-gray-900 text-white py-10">
+            <section className="bg-gradient-to-r from-blue-700 to-blue-900 text-white py-20 px-6">
 
-                <div className="max-w-6xl mx-auto px-6">
+                <div className="max-w-5xl mx-auto text-center">
 
-                    <h1 className="text-4xl font-bold">
-                        Auto Parts Search Engine
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                        Find the Best Price on Auto Parts
                     </h1>
 
-                    <p className="text-gray-300 mt-2">
-                        Compare prices from eBay and Amazon
+                    <p className="text-blue-100 text-lg mb-10">
+                        Compare prices from multiple marketplaces and get the best deal for your vehicle
                     </p>
+
+                    {/* Vehicle Search */}
+
+                    <div className="bg-white rounded-xl shadow-xl p-6 text-black">
+
+                        <div className="grid md:grid-cols-3 gap-3 mb-4">
+
+                            <input
+                                className="border p-3 rounded"
+                                placeholder="Year"
+                                value={vehicle.year}
+                                onChange={(e) =>
+                                    setVehicle({ ...vehicle, year: e.target.value })
+                                }
+                            />
+
+                            <input
+                                className="border p-3 rounded"
+                                placeholder="Make"
+                                value={vehicle.make}
+                                onChange={(e) =>
+                                    setVehicle({ ...vehicle, make: e.target.value })
+                                }
+                            />
+
+                            <input
+                                className="border p-3 rounded"
+                                placeholder="Model"
+                                value={vehicle.model}
+                                onChange={(e) =>
+                                    setVehicle({ ...vehicle, model: e.target.value })
+                                }
+                            />
+
+                            <input
+                                className="border p-3 rounded"
+                                placeholder="Engine"
+                                value={vehicle.engine}
+                                onChange={(e) =>
+                                    setVehicle({ ...vehicle, engine: e.target.value })
+                                }
+                            />
+
+                            <input
+                                className="border p-3 rounded"
+                                placeholder="Trim"
+                                value={vehicle.trim}
+                                onChange={(e) =>
+                                    setVehicle({ ...vehicle, trim: e.target.value })
+                                }
+                            />
+
+                            <input
+                                className="border p-3 rounded"
+                                placeholder="Part (ex: brake pads)"
+                                value={vehicle.part}
+                                onChange={(e) =>
+                                    setVehicle({ ...vehicle, part: e.target.value })
+                                }
+                            />
+
+                        </div>
+
+                        <button
+                            onClick={searchVehicle}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
+                        >
+                            Search Parts
+                        </button>
+
+                    </div>
 
                 </div>
 
-            </div>
+            </section>
 
-            <div className="max-w-6xl mx-auto px-6 py-10">
 
-                {/* Keyword Search */}
+            {/* KEYWORD SEARCH */}
 
-                <div className="bg-white p-6 rounded-lg shadow mb-8">
+            <section className="max-w-4xl mx-auto px-6 mt-12">
 
-                    <h2 className="font-semibold mb-3">
-                        Search by Part
+                <div className="bg-white p-6 rounded-lg shadow mb-10">
+
+                    <h2 className="font-semibold text-lg mb-3">
+                        Search by Part Name
                     </h2>
 
                     <div className="flex gap-3">
 
                         <input
-                            className="flex-1 border rounded px-4 py-3"
+                            className="flex-1 border p-3 rounded"
                             placeholder="ex: brake pads"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
@@ -122,7 +180,7 @@ export default function Home() {
 
                         <button
                             onClick={searchKeyword}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded"
+                            className="bg-green-600 hover:bg-green-700 text-white px-6 rounded"
                         >
                             Search
                         </button>
@@ -131,150 +189,93 @@ export default function Home() {
 
                 </div>
 
-                {/* Vehicle Search */}
+            </section>
 
-                <div className="bg-white p-6 rounded-lg shadow mb-10">
 
-                    <h2 className="font-semibold mb-4">
-                        Search by Vehicle
-                    </h2>
+            {/* RESULTS */}
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-
-                        <input
-                            className="border rounded p-2"
-                            placeholder="Year"
-                            value={vehicle.year}
-                            onChange={(e) =>
-                                setVehicle({ ...vehicle, year: e.target.value })
-                            }
-                        />
-
-                        <input
-                            className="border rounded p-2"
-                            placeholder="Make"
-                            value={vehicle.make}
-                            onChange={(e) =>
-                                setVehicle({ ...vehicle, make: e.target.value })
-                            }
-                        />
-
-                        <input
-                            className="border rounded p-2"
-                            placeholder="Model"
-                            value={vehicle.model}
-                            onChange={(e) =>
-                                setVehicle({ ...vehicle, model: e.target.value })
-                            }
-                        />
-
-                        <input
-                            className="border rounded p-2"
-                            placeholder="Engine"
-                            value={vehicle.engine}
-                            onChange={(e) =>
-                                setVehicle({ ...vehicle, engine: e.target.value })
-                            }
-                        />
-
-                        <input
-                            className="border rounded p-2"
-                            placeholder="Trim"
-                            value={vehicle.trim}
-                            onChange={(e) =>
-                                setVehicle({ ...vehicle, trim: e.target.value })
-                            }
-                        />
-
-                        <input
-                            className="border rounded p-2"
-                            placeholder="Part (ex: brake pads)"
-                            value={vehicle.part}
-                            onChange={(e) =>
-                                setVehicle({ ...vehicle, part: e.target.value })
-                            }
-                        />
-
-                    </div>
-
-                    <button
-                        onClick={searchVehicle}
-                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded"
-                    >
-                        Search Parts
-                    </button>
-
-                </div>
-
-                {/* Loading */}
+            <section className="max-w-6xl mx-auto px-6 pb-16">
 
                 {loading && (
-                    <p className="text-center text-gray-600 mb-6">
-                        Searching listings...
+                    <p className="text-center text-gray-500 mb-6">
+                        Searching for parts...
                     </p>
                 )}
 
-                {/* Results */}
+                {results.length > 0 && (() => {
+                    const bestPrice = Math.min(...results.map(r => r.totalPrice));
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    return (
+                        <div className="grid md:grid-cols-3 gap-6">
 
-                    {results.map((item, i) => (
+                            {results.map((item, i) => {
 
-                        <div
-                            key={i}
-                            className="bg-white rounded-lg shadow hover:shadow-lg transition p-5 flex flex-col"
-                        >
+                                const isBest = item.totalPrice === bestPrice;
 
-                            {/* Image Placeholder */}
+                                return (
 
-                            <div className="bg-gray-200 h-40 rounded mb-4 flex items-center justify-center text-gray-500">
-                                Image
-                            </div>
+                                    <div
+                                        key={i}
+                                        className={`bg-white rounded-xl shadow-lg overflow-hidden transition hover:shadow-2xl 
+                            ${isBest ? "ring-4 ring-green-500" : ""}`}
+                                    >
 
-                            {/* Title */}
+                                        {/* Product Image */}
+                                        {item.imageUrl && (
+                                            <img
+                                                src={item.imageUrl}
+                                                alt={item.title}
+                                                className="h-48 w-full object-cover"
+                                            />
+                                        )}
 
-                            <h3 className="font-semibold text-lg mb-2">
-                                {item.title}
-                            </h3>
+                                        <div className="p-6">
 
-                            {/* Source Badge */}
+                                            {/* Store Badge */}
+                                            <div className="mb-2">
+                                                {item.source === "AMAZON" && (
+                                                    <span className="bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full">
+                                            AMAZON
+                                        </span>
+                                                )}
 
-                            <div className="mb-2">
+                                                {item.source === "EBAY" && (
+                                                    <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                            EBAY
+                                        </span>
+                                                )}
+                                            </div>
 
-                                <span className={`text-xs px-2 py-1 rounded font-semibold
-                                    ${item.source === "EBAY"
-                                    ? "bg-yellow-200 text-yellow-800"
-                                    : "bg-orange-200 text-orange-800"}
-                                `}>
-                                    {item.source}
-                                </span>
+                                            <h3 className="font-semibold text-lg mb-3">
+                                                {item.title}
+                                            </h3>
 
-                            </div>
+                                            <div className="text-2xl font-bold mb-3 text-green-600">
+                                                ${item.totalPrice.toFixed(2)}
+                                            </div>
 
-                            {/* Price */}
+                                            {isBest && (
+                                                <div className="text-sm font-semibold text-green-700 mb-3">
+                                                    Best Price
+                                                </div>
+                                            )}
 
-                            <div className="text-2xl font-bold mb-4">
-                                ${item.totalPrice.toFixed(2)}
-                            </div>
+                                            <a
+                                                href={item.productUrl}
+                                                target="_blank"
+                                                className="block text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
+                                            >
+                                                View Listing
+                                            </a>
 
-                            {/* Button */}
-
-                            <a
-                                href={item.productUrl}
-                                target="_blank"
-                                className="mt-auto bg-blue-600 hover:bg-blue-700 text-white text-center py-2 rounded"
-                            >
-                                View Listing
-                            </a>
-
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-
-                    ))}
-
-                </div>
-
-            </div>
-
+                    );
+                })()}
+            </section>
         </main>
     );
 }
