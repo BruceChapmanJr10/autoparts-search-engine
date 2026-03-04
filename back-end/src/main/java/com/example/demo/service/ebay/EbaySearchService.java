@@ -176,6 +176,40 @@ public class EbaySearchService {
                                 .lastUpdated(now)
                                 .build();
 
+                        // Add mock fitments for Accord listing
+                        if (r.getTitle().contains("Accord")) {
+
+                            ListingFitment accordFitment =
+                                    ListingFitment.builder()
+                                            .listing(listing)
+                                            .make("Honda")
+                                            .model("Accord")
+                                            .yearStart(2016)
+                                            .yearEnd(2022)
+                                            .trim("Sport")
+                                            .engine("1.5L")
+                                            .build();
+
+                            listing.setFitments(List.of(accordFitment));
+                        }
+
+                        // Add mock fitments for F-150 listing
+                        if (r.getTitle().contains("F-150")) {
+
+                            ListingFitment fordFitment =
+                                    ListingFitment.builder()
+                                            .listing(listing)
+                                            .make("Ford")
+                                            .model("F-150")
+                                            .yearStart(2015)
+                                            .yearEnd(2022)
+                                            .trim("XLT")
+                                            .engine("3.5L")
+                                            .build();
+
+                            listing.setFitments(List.of(fordFitment));
+                        }
+
                         listingRepository.save(listing);
                     });
         });

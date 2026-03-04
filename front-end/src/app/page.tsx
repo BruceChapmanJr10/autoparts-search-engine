@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -19,9 +19,13 @@ export default function Home() {
 
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [sortOption, setSortOption] = useState("low");
+
+    // NEW: Source filters
+    const [showAmazon, setShowAmazon] = useState(true);
+    const [showEbay, setShowEbay] = useState(true);
 
     async function searchKeyword() {
-
         if (!query) return;
 
         setLoading(true);
@@ -31,48 +35,61 @@ export default function Home() {
         );
 
         const data = await res.json();
-
         setResults(data);
         setLoading(false);
     }
 
     async function searchVehicle() {
-
         if (!vehicle.part) return;
 
         setLoading(true);
 
-        const res = await fetch(
-            `${API_URL}/api/search`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    year: parseInt(vehicle.year),
-                    make: vehicle.make,
-                    model: vehicle.model,
-                    engine: vehicle.engine,
-                    trim: vehicle.trim,
-                    part: vehicle.part
-                })
-            }
-        );
+        const res = await fetch(`${API_URL}/api/search`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                year: parseInt(vehicle.year),
+                make: vehicle.make,
+                model: vehicle.model,
+                engine: vehicle.engine,
+                trim: vehicle.trim,
+                part: vehicle.part
+            })
+        });
 
         const data = await res.json();
-
         setResults(data);
         setLoading(false);
     }
 
+    // Filter by source first
+    const filteredResults = useMemo(() => {
+        return results.filter(item => {
+            if (item.source === "AMAZON" && !showAmazon) return false;
+            if (item.source === "EBAY" && !showEbay) return false;
+            return true;
+        });
+    }, [results, showAmazon, showEbay]);
+
+    // Then sort
+    const sortedResults = useMemo(() => {
+        return [...filteredResults].sort((a, b) =>
+            sortOption === "low"
+                ? (a.totalPrice ?? 0) - (b.totalPrice ?? 0)
+                : (b.totalPrice ?? 0) - (a.totalPrice ?? 0)
+        );
+    }, [filteredResults, sortOption]);
+
+    const lowestPrice =
+        sortedResults.length > 0
+            ? Math.min(...sortedResults.map(r => r.totalPrice))
+            : 0;
+
     return (
-        <main className="min-h-screen bg-gray-50">
+        <main className="min-h-screen bg-gray-50 pb-16">
 
-            {/* HERO SECTION */}
-
+            {/* HERO */}
             <section className="bg-gradient-to-r from-blue-700 to-blue-900 text-white py-20 px-6">
-
                 <div className="max-w-5xl mx-auto text-center">
 
                     <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -80,69 +97,23 @@ export default function Home() {
                     </h1>
 
                     <p className="text-blue-100 text-lg mb-10">
-                        Compare prices from multiple marketplaces and get the best deal for your vehicle
+                        Compare prices from multiple marketplaces instantly
                     </p>
-
-                    {/* Vehicle Search */}
 
                     <div className="bg-white rounded-xl shadow-xl p-6 text-black">
 
                         <div className="grid md:grid-cols-3 gap-3 mb-4">
-
-                            <input
-                                className="border p-3 rounded"
-                                placeholder="Year"
-                                value={vehicle.year}
-                                onChange={(e) =>
-                                    setVehicle({ ...vehicle, year: e.target.value })
-                                }
-                            />
-
-                            <input
-                                className="border p-3 rounded"
-                                placeholder="Make"
-                                value={vehicle.make}
-                                onChange={(e) =>
-                                    setVehicle({ ...vehicle, make: e.target.value })
-                                }
-                            />
-
-                            <input
-                                className="border p-3 rounded"
-                                placeholder="Model"
-                                value={vehicle.model}
-                                onChange={(e) =>
-                                    setVehicle({ ...vehicle, model: e.target.value })
-                                }
-                            />
-
-                            <input
-                                className="border p-3 rounded"
-                                placeholder="Engine"
-                                value={vehicle.engine}
-                                onChange={(e) =>
-                                    setVehicle({ ...vehicle, engine: e.target.value })
-                                }
-                            />
-
-                            <input
-                                className="border p-3 rounded"
-                                placeholder="Trim"
-                                value={vehicle.trim}
-                                onChange={(e) =>
-                                    setVehicle({ ...vehicle, trim: e.target.value })
-                                }
-                            />
-
-                            <input
-                                className="border p-3 rounded"
-                                placeholder="Part (ex: brake pads)"
-                                value={vehicle.part}
-                                onChange={(e) =>
-                                    setVehicle({ ...vehicle, part: e.target.value })
-                                }
-                            />
-
+                            {["year","make","model","engine","trim","part"].map((field) => (
+                                <input
+                                    key={field}
+                                    className="border p-3 rounded"
+                                    placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                                    value={(vehicle as any)[field]}
+                                    onChange={(e) =>
+                                        setVehicle({ ...vehicle, [field]: e.target.value })
+                                    }
+                                />
+                            ))}
                         </div>
 
                         <button
@@ -153,129 +124,129 @@ export default function Home() {
                         </button>
 
                     </div>
-
                 </div>
-
             </section>
 
+            {/* FILTERS + SORT */}
+            {results.length > 0 && (
+                <div className="max-w-6xl mx-auto px-6 mt-8 flex flex-wrap gap-4 justify-between items-center">
 
-            {/* KEYWORD SEARCH */}
+                    {/* Source Toggles */}
+                    <div className="flex gap-4">
 
-            <section className="max-w-4xl mx-auto px-6 mt-12">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={showAmazon}
+                                onChange={() => setShowAmazon(!showAmazon)}
+                            />
+                            <span className="bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full">
+                                AMAZON
+                            </span>
+                        </label>
 
-                <div className="bg-white p-6 rounded-lg shadow mb-10">
-
-                    <h2 className="font-semibold text-lg mb-3">
-                        Search by Part Name
-                    </h2>
-
-                    <div className="flex gap-3">
-
-                        <input
-                            className="flex-1 border p-3 rounded"
-                            placeholder="ex: brake pads"
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                        />
-
-                        <button
-                            onClick={searchKeyword}
-                            className="bg-green-600 hover:bg-green-700 text-white px-6 rounded"
-                        >
-                            Search
-                        </button>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={showEbay}
+                                onChange={() => setShowEbay(!showEbay)}
+                            />
+                            <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                EBAY
+                            </span>
+                        </label>
 
                     </div>
 
+                    {/* Sort */}
+                    <select
+                        value={sortOption}
+                        onChange={(e) => setSortOption(e.target.value)}
+                        className="border p-2 rounded"
+                    >
+                        <option value="low">Price: Low to High</option>
+                        <option value="high">Price: High to Low</option>
+                    </select>
+
                 </div>
-
-            </section>
-
+            )}
 
             {/* RESULTS */}
+            <section className="max-w-6xl mx-auto px-6 mt-8 grid md:grid-cols-3 gap-6">
 
-            <section className="max-w-6xl mx-auto px-6 pb-16">
+                {loading && <p>Searching...</p>}
 
-                {loading && (
-                    <p className="text-center text-gray-500 mb-6">
-                        Searching for parts...
-                    </p>
-                )}
+                {sortedResults.map((item, i) => {
 
-                {results.length > 0 && (() => {
-                    const bestPrice = Math.min(...results.map(r => r.totalPrice));
+                    const isBest = item.totalPrice === lowestPrice;
 
                     return (
-                        <div className="grid md:grid-cols-3 gap-6">
+                        <div
+                            key={i}
+                            className={`bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden ${
+                                isBest ? "ring-4 ring-green-500" : ""
+                            }`}
+                        >
 
-                            {results.map((item, i) => {
+                            {item.imageUrl && (
+                                <img
+                                    src={item.imageUrl}
+                                    alt={item.title}
+                                    className="w-full h-48 object-cover"
+                                />
+                            )}
 
-                                const isBest = item.totalPrice === bestPrice;
+                            <div className="p-5">
 
-                                return (
+                                <div className="flex justify-between items-center mb-2">
 
-                                    <div
-                                        key={i}
-                                        className={`bg-white rounded-xl shadow-lg overflow-hidden transition hover:shadow-2xl 
-                            ${isBest ? "ring-4 ring-green-500" : ""}`}
+                                    <span
+                                        className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                                            item.source === "AMAZON"
+                                                ? "bg-yellow-400 text-black"
+                                                : "bg-blue-600 text-white"
+                                        }`}
                                     >
+                                        {item.source}
+                                    </span>
 
-                                        {/* Product Image */}
-                                        {item.imageUrl && (
-                                            <img
-                                                src={item.imageUrl}
-                                                alt={item.title}
-                                                className="h-48 w-full object-cover"
-                                            />
-                                        )}
-
-                                        <div className="p-6">
-
-                                            {/* Store Badge */}
-                                            <div className="mb-2">
-                                                {item.source === "AMAZON" && (
-                                                    <span className="bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full">
-                                            AMAZON
+                                    {item.shippingCost === 0 && (
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                            Free Shipping
                                         </span>
-                                                )}
+                                    )}
 
-                                                {item.source === "EBAY" && (
-                                                    <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                                            EBAY
-                                        </span>
-                                                )}
-                                            </div>
+                                </div>
 
-                                            <h3 className="font-semibold text-lg mb-3">
-                                                {item.title}
-                                            </h3>
+                                <h3 className="font-semibold mb-2">
+                                    {item.title}
+                                </h3>
 
-                                            <div className="text-2xl font-bold mb-3 text-green-600">
-                                                ${item.totalPrice.toFixed(2)}
-                                            </div>
+                                <div className="text-2xl font-bold text-green-600 mb-2">
+                                    ${item.totalPrice.toFixed(2)}
+                                </div>
 
-                                            {isBest && (
-                                                <div className="text-sm font-semibold text-green-700 mb-3">
-                                                    Best Price
-                                                </div>
-                                            )}
-
-                                            <a
-                                                href={item.productUrl}
-                                                target="_blank"
-                                                className="block text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
-                                            >
-                                                View Listing
-                                            </a>
-
-                                        </div>
+                                {isBest && (
+                                    <div className="text-sm text-green-600 font-semibold mb-2">
+                                        ⭐ Best Price
                                     </div>
-                                );
-                            })}
+                                )}
+
+                                <a
+                                    href={item.productUrl}
+                                    target="_blank"
+                                    className="block text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+                                >
+                                    View Listing
+                                </a>
+
+                            </div>
                         </div>
                     );
-                })()}
+                })}
+
             </section>
+
         </main>
     );
 }
