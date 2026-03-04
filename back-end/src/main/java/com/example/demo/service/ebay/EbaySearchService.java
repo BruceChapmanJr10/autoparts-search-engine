@@ -45,7 +45,17 @@ public class EbaySearchService {
 
         if (cacheValid) {
             return cached.stream()
-                    .map(this::mapToResponse)
+                    .map(listing -> ListingResponse.builder()
+                            .title(listing.getTitle())
+                            .source(listing.getSource())
+                            .price(listing.getPrice())
+                            .shippingCost(listing.getShippingCost())
+                            .totalPrice(listing.getTotalPrice())
+                            .productUrl(listing.getProductUrl())
+                            .imageUrl(listing.getImageUrl())
+                            .availability(listing.getAvailability())
+                            .exactMatch(false)
+                            .build())
                     .collect(Collectors.toList());
         }
 
@@ -96,7 +106,7 @@ public class EbaySearchService {
                     );
 
             return validated.stream()
-                    .map(this::mapToResponse)
+                    .map(listing -> mapToResponse(listing, request))
                     .collect(Collectors.toList());
         }
 
@@ -109,7 +119,8 @@ public class EbaySearchService {
                         .shippingCost(6.99)
                         .totalPrice(91.98)
                         .productUrl("https://www.ebay.com/mock-fitment-1")
-                        .imageUrl("https://images.unsplash.com/photo-1581093458791-9f3c3900b1f1?auto=format&fit=crop&w=800&q=80")                        .availability("In Stock")
+                        .imageUrl("https://images.unsplash.com/photo-1581093458791-9f3c3900b1f1?auto=format&fit=crop&w=800&q=80")
+                        .availability("In Stock")
                         .build(),
 
                 ListingResponse.builder()
@@ -135,7 +146,7 @@ public class EbaySearchService {
                 );
 
         return validated.stream()
-                .map(this::mapToResponse)
+                .map(listing -> mapToResponse(listing, request))
                 .collect(Collectors.toList());
     }
 
@@ -215,7 +226,16 @@ public class EbaySearchService {
         });
     }
 
-    private ListingResponse mapToResponse(Listing listing) {
+    private ListingResponse mapToResponse(
+            Listing listing,
+            VehicleSearchRequest request
+    ) {
+
+        boolean exact =
+                fitmentValidationService.isExactMatch(
+                        listing,
+                        request
+                );
 
         return ListingResponse.builder()
                 .title(listing.getTitle())
@@ -226,6 +246,7 @@ public class EbaySearchService {
                 .productUrl(listing.getProductUrl())
                 .imageUrl(listing.getImageUrl())
                 .availability(listing.getAvailability())
+                .exactMatch(exact)
                 .build();
     }
 }

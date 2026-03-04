@@ -22,4 +22,6 @@ public class ListingResponse {
     private String imageUrl;
 
     private String availability;
+
+    private boolean exactMatch;
 }

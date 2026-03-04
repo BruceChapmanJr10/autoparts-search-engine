@@ -18,12 +18,16 @@ public class FitmentValidationService {
 
         return listings.stream()
                 .filter(listing ->
-                        isVehicleCompatible(listing, request)
+                        listing.getFitments() != null &&
+                                listing.getFitments().stream()
+                                        .anyMatch(fitment ->
+                                                isCompatible(fitment, request)
+                                        )
                 )
                 .collect(Collectors.toList());
     }
 
-    private boolean isVehicleCompatible(
+    public boolean isExactMatch(
             Listing listing,
             VehicleSearchRequest request
     ) {
@@ -31,42 +35,54 @@ public class FitmentValidationService {
         if (listing.getFitments() == null) return false;
 
         return listing.getFitments().stream()
-                .anyMatch(fitment -> {
+                .anyMatch(fitment ->
+                        isCompatible(fitment, request)
+                                && isExact(fitment, request)
+                );
+    }
 
-                    // Year range check
-                    if (request.getYear() < fitment.getYearStart()
-                            || request.getYear() > fitment.getYearEnd()) {
-                        return false;
-                    }
+    private boolean isCompatible(
+            ListingFitment fitment,
+            VehicleSearchRequest request
+    ) {
 
-                    // Make & model
-                    if (!request.getMake()
-                            .equalsIgnoreCase(fitment.getMake())) {
-                        return false;
-                    }
+        if (request.getYear() < fitment.getYearStart()
+                || request.getYear() > fitment.getYearEnd()) {
+            return false;
+        }
 
-                    if (!request.getModel()
-                            .equalsIgnoreCase(fitment.getModel())) {
-                        return false;
-                    }
+        if (!request.getMake()
+                .equalsIgnoreCase(fitment.getMake())) {
+            return false;
+        }
 
-                    // Optional trim match
-                    if (request.getTrim() != null
-                            && fitment.getTrim() != null
-                            && !request.getTrim()
-                            .equalsIgnoreCase(fitment.getTrim())) {
-                        return false;
-                    }
+        if (!request.getModel()
+                .equalsIgnoreCase(fitment.getModel())) {
+            return false;
+        }
 
-                    // Optional engine match
-                    if (request.getEngine() != null
-                            && fitment.getEngine() != null
-                            && !request.getEngine()
-                            .equalsIgnoreCase(fitment.getEngine())) {
-                        return false;
-                    }
+        return true;
+    }
 
-                    return true;
-                });
+    private boolean isExact(
+            ListingFitment fitment,
+            VehicleSearchRequest request
+    ) {
+
+        if (request.getTrim() != null
+                && fitment.getTrim() != null
+                && !request.getTrim()
+                .equalsIgnoreCase(fitment.getTrim())) {
+            return false;
+        }
+
+        if (request.getEngine() != null
+                && fitment.getEngine() != null
+                && !request.getEngine()
+                .equalsIgnoreCase(fitment.getEngine())) {
+            return false;
+        }
+
+        return true;
     }
 }

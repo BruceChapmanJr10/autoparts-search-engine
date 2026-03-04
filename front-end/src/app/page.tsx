@@ -174,7 +174,11 @@ export default function Home() {
             {/* RESULTS */}
             <section className="max-w-6xl mx-auto px-6 mt-8 grid md:grid-cols-3 gap-6">
 
-                {loading && <p>Searching...</p>}
+                {loading && (
+                    <div className="col-span-full text-center text-gray-500">
+                        Searching for parts...
+                    </div>
+                )}
 
                 {sortedResults.map((item, i) => {
 
@@ -217,13 +221,17 @@ export default function Home() {
                                     )}
 
                                 </div>
-
+                                {item.exactMatch && (
+                                    <div className="text-xs bg-green-600 text-white px-2 py-1 rounded mb-2 inline-block">
+                                        Exact Fit
+                                    </div>
+                                )}
                                 <h3 className="font-semibold mb-2">
                                     {item.title}
                                 </h3>
 
                                 <div className="text-2xl font-bold text-green-600 mb-2">
-                                    ${item.totalPrice.toFixed(2)}
+                                    ${(item.totalPrice ?? 0).toFixed(2)}
                                 </div>
 
                                 {isBest && (
