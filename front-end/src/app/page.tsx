@@ -85,6 +85,11 @@ export default function Home() {
             ? Math.min(...sortedResults.map(r => r.totalPrice))
             : 0;
 
+    function getPriceDifference(price: number) {
+        const diff = price - lowestPrice;
+        return diff > 0 ? diff.toFixed(2) : null;
+    }
+
     return (
         <main className="min-h-screen bg-gray-50 pb-16">
 
@@ -229,14 +234,13 @@ export default function Home() {
                                 <h3 className="font-semibold mb-2">
                                     {item.title}
                                 </h3>
-
-                                <div className="text-2xl font-bold text-green-600 mb-2">
+                                <div className="text-2xl font-bold text-green-600 mb-1">
                                     ${(item.totalPrice ?? 0).toFixed(2)}
                                 </div>
 
-                                {isBest && (
-                                    <div className="text-sm text-green-600 font-semibold mb-2">
-                                        ⭐ Best Price
+                                {!isBest && (
+                                    <div className="text-sm text-red-500 font-semibold mb-2">
+                                        +${getPriceDifference(item.totalPrice)} more
                                     </div>
                                 )}
 
