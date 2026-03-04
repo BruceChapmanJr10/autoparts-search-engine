@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/vin")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin
 public class VinController {
 
     private final VinService vinService;

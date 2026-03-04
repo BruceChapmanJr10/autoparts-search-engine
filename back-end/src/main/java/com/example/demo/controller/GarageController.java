@@ -8,7 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/garage")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin
 public class GarageController {
 
     private final GarageService garageService;
@@ -17,7 +17,6 @@ public class GarageController {
         this.garageService = garageService;
     }
 
-    // Save vehicle
     @PostMapping
     public GarageVehicle saveVehicle(
             @RequestBody GarageVehicle vehicle
@@ -25,11 +24,17 @@ public class GarageController {
         return garageService.saveVehicle(vehicle);
     }
 
-    // Get garage vehicles
     @GetMapping("/{garageId}")
     public List<GarageVehicle> getGarage(
             @PathVariable String garageId
     ) {
         return garageService.getGarage(garageId);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteVehicle(
+            @PathVariable Long id
+    ) {
+        garageService.deleteVehicle(id);
     }
 }

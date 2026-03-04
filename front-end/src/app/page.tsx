@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 
+import GarageBar from "@/src/components/GarageBar";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {
@@ -16,6 +18,20 @@ export default function Home() {
         trim: "",
         part: ""
     });
+
+    function handleGarageSelect(vehicle: any) {
+        document.getElementById("part-input")?.focus();
+        setVehicle({
+            year: vehicle.year.toString(),
+            make: vehicle.make,
+            model: vehicle.model,
+            engine: vehicle.engine || "",
+            trim: vehicle.trim || "",
+            part: vehicle.part || ""
+        });
+    }
+
+
 
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -62,6 +78,41 @@ export default function Home() {
         setLoading(false);
     }
 
+    async function saveVehicle() {
+
+        if (!vehicle.year || !vehicle.make || !vehicle.model) {
+            alert("Please enter Year, Make, and Model first");
+            return;
+        }
+
+        const garageId =
+            localStorage.getItem("garageId") ??
+            (() => {
+                const id = crypto.randomUUID();
+                localStorage.setItem("garageId", id);
+                return id;
+            })();
+
+        await fetch(`${API_URL}/api/garage`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                garageId: garageId,
+                year: parseInt(vehicle.year),
+                make: vehicle.make,
+                model: vehicle.model,
+                trim: vehicle.trim,
+                engine: vehicle.engine
+            })
+        });
+
+        window.dispatchEvent(new Event("garageUpdated"));
+
+        alert("Vehicle saved to garage 🚗");
+    }
+
     // Filter by source first
     const filteredResults = useMemo(() => {
         return results.filter(item => {
@@ -91,123 +142,139 @@ export default function Home() {
     }
 
     return (
-        <main className="min-h-screen bg-gray-50 pb-16">
+        <main className="min-h-screen bg-gray-50">
 
-            {/* HERO */}
-            <section className="bg-gradient-to-r from-blue-700 to-blue-900 text-white py-20 px-6">
-                <div className="max-w-5xl mx-auto text-center">
+            <GarageBar onSelectVehicle={handleGarageSelect} />
 
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                        Find the Best Price on Auto Parts
-                    </h1>
 
-                    <p className="text-blue-100 text-lg mb-10">
-                        Compare prices from multiple marketplaces instantly
-                    </p>
 
-                    <div className="bg-white rounded-xl shadow-xl p-6 text-black">
+                {/* HERO */}
+                <section className="bg-gradient-to-r from-blue-700 to-blue-900 text-white py-20 px-6">
+                    <div className="max-w-5xl mx-auto text-center">
 
-                        <div className="grid md:grid-cols-3 gap-3 mb-4">
-                            {["year","make","model","engine","trim","part"].map((field) => (
-                                <input
-                                    key={field}
-                                    className="border p-3 rounded"
-                                    placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                                    value={(vehicle as any)[field]}
-                                    onChange={(e) =>
-                                        setVehicle({ ...vehicle, [field]: e.target.value })
-                                    }
-                                />
-                            ))}
+                        <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                            Find the Best Price on Auto Parts
+                        </h1>
+
+                        <p className="text-blue-100 text-lg mb-10">
+                            Compare prices from multiple marketplaces instantly
+                        </p>
+
+                        <div className="bg-white rounded-xl shadow-xl p-6 text-black">
+
+                            <div className="grid md:grid-cols-3 gap-3 mb-4">
+                                {["year","make","model","engine","trim","part"].map((field) => (
+                                    <input
+                                        key={field}
+                                        className="border p-3 rounded"
+                                        placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                                        value={(vehicle as any)[field]}
+                                        onChange={(e) =>
+                                            setVehicle({ ...vehicle, [field]: e.target.value })
+                                        }
+                                    />
+                                ))}
+                            </div>
+
                         </div>
 
-                        <button
-                            onClick={searchVehicle}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
-                        >
-                            Search Parts
-                        </button>
+                        <div className="flex flex-wrap gap-3 justify-center mt-4">
 
-                    </div>
-                </div>
-            </section>
+                            <button
+                                onClick={searchVehicle}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold"
+                            >
+                                Search Parts
+                            </button>
 
-            {/* FILTERS + SORT */}
-            {results.length > 0 && (
-                <div className="max-w-6xl mx-auto px-6 mt-8 flex flex-wrap gap-4 justify-between items-center">
+                            <button
+                                onClick={saveVehicle}
+                                className="bg-gray-800 hover:bg-black text-white px-6 py-3 rounded-lg font-semibold"
+                            >
+                                Save Vehicle
+                            </button>
 
-                    {/* Source Toggles */}
-                    <div className="flex gap-4">
+                        </div>
 
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={showAmazon}
-                                onChange={() => setShowAmazon(!showAmazon)}
-                            />
-                            <span className="bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full">
+                        </div>
+                </section>
+
+                {/* FILTERS + SORT */}
+                {results.length > 0 && (
+                    <div className="max-w-6xl mx-auto px-6 mt-8 flex flex-wrap gap-4 justify-between items-center">
+
+                        {/* Source Toggles */}
+                        <div className="flex gap-4">
+
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={showAmazon}
+                                    onChange={() => setShowAmazon(!showAmazon)}
+                                />
+                                <span className="bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-full">
                                 AMAZON
                             </span>
-                        </label>
+                            </label>
 
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={showEbay}
-                                onChange={() => setShowEbay(!showEbay)}
-                            />
-                            <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={showEbay}
+                                    onChange={() => setShowEbay(!showEbay)}
+                                />
+                                <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
                                 EBAY
                             </span>
-                        </label>
+                            </label>
 
-                    </div>
+                        </div>
 
-                    {/* Sort */}
-                    <select
-                        value={sortOption}
-                        onChange={(e) => setSortOption(e.target.value)}
-                        className="border p-2 rounded"
-                    >
-                        <option value="low">Price: Low to High</option>
-                        <option value="high">Price: High to Low</option>
-                    </select>
+                        {/* Sort */}
+                        <select
+                            value={sortOption}
+                            onChange={(e) => setSortOption(e.target.value)}
+                            className="border p-2 rounded"
+                        >
+                            <option value="low">Price: Low to High</option>
+                            <option value="high">Price: High to Low</option>
+                        </select>
 
-                </div>
-            )}
-
-            {/* RESULTS */}
-            <section className="max-w-6xl mx-auto px-6 mt-8 grid md:grid-cols-3 gap-6">
-
-                {loading && (
-                    <div className="col-span-full text-center text-gray-500">
-                        Searching for parts...
                     </div>
                 )}
 
-                {sortedResults.map((item, i) => {
+                {/* RESULTS */}
+                <section className="max-w-6xl mx-auto px-6 mt-8 grid md:grid-cols-3 gap-6">
 
-                    const isBest = item.totalPrice === lowestPrice;
+                    {loading && (
+                        <div className="col-span-full text-center text-gray-500">
+                            Searching for parts...
+                        </div>
+                    )}
 
-                    return (
-                        <div
-                            key={i}
-                            className={`bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden ${
-                                isBest ? "ring-4 ring-green-500" : ""
-                            }`}
-                        >
+                    {sortedResults.map((item, i) => {
 
-                            {item.imageUrl && (
-                                <img
-                                    src={item.imageUrl}
-                                    alt={item.title}
-                                    className="w-full h-48 object-cover"
-                                />
-                            )}
+                        const isBest = item.totalPrice === lowestPrice;
 
-                            <div className="p-5">
+                        return (
+                            <div
+                                key={i}
+                                className={`bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden ${
+                                    isBest ? "ring-4 ring-green-500" : ""
+                                }`}
+                            >
 
-                                <div className="flex justify-between items-center mb-2">
+                                {item.imageUrl && (
+                                    <img
+                                        src={item.imageUrl}
+                                        alt={item.title}
+                                        className="w-full h-48 object-cover"
+                                    />
+                                )}
+
+                                <div className="p-5">
+
+                                    <div className="flex justify-between items-center mb-2">
 
                                     <span
                                         className={`text-xs px-3 py-1 rounded-full font-semibold ${
@@ -219,46 +286,47 @@ export default function Home() {
                                         {item.source}
                                     </span>
 
-                                    {item.shippingCost === 0 && (
-                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                        {item.shippingCost === 0 && (
+                                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
                                             Free Shipping
                                         </span>
+                                        )}
+
+                                    </div>
+                                    {item.exactMatch && (
+                                        <div className="text-xs bg-green-600 text-white px-2 py-1 rounded mb-2 inline-block">
+                                            Exact Fit
+                                        </div>
+                                    )}
+                                    <h3 className="font-semibold mb-2">
+                                        {item.title}
+                                    </h3>
+                                    <div className="text-2xl font-bold text-green-600 mb-1">
+                                        ${(item.totalPrice ?? 0).toFixed(2)}
+                                    </div>
+
+                                    {!isBest && (
+                                        <div className="text-sm text-red-500 font-semibold mb-2">
+                                            +${getPriceDifference(item.totalPrice)} more
+                                        </div>
                                     )}
 
+                                    <a
+                                        href={item.productUrl}
+                                        target="_blank"
+                                        className="block text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+                                    >
+                                        View Listing
+                                    </a>
+
                                 </div>
-                                {item.exactMatch && (
-                                    <div className="text-xs bg-green-600 text-white px-2 py-1 rounded mb-2 inline-block">
-                                        Exact Fit
-                                    </div>
-                                )}
-                                <h3 className="font-semibold mb-2">
-                                    {item.title}
-                                </h3>
-                                <div className="text-2xl font-bold text-green-600 mb-1">
-                                    ${(item.totalPrice ?? 0).toFixed(2)}
-                                </div>
-
-                                {!isBest && (
-                                    <div className="text-sm text-red-500 font-semibold mb-2">
-                                        +${getPriceDifference(item.totalPrice)} more
-                                    </div>
-                                )}
-
-                                <a
-                                    href={item.productUrl}
-                                    target="_blank"
-                                    className="block text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
-                                >
-                                    View Listing
-                                </a>
-
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
 
-            </section>
-
+                </section>
         </main>
+
+
     );
 }
