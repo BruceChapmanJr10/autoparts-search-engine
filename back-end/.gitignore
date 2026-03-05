@@ -47,3 +47,6 @@ logs/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Google Cloud credentials
+auto-parts-vision-4a7c148c0fea.json
